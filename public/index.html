@@ -1,0 +1,17 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="client.js"></script>
+<div style="float:left;width:100px;border-right:1px solid black;height:500px;padding:10px;overflow-y:scroll;">
+    <b>ROOMS</b>
+    <div id="rooms"></div>
+    <input type="button" id="addRoom" value="Add Room" />
+</div>
+<div style="float:left;width:500px;height:600px;padding:10px;">
+    <div id="conversation" style="min-height:500px;max-height:500px;overflow-y:scroll;padding:10px;"></div>
+    <input id="data" style="width:200px;" />
+    <input type="button" id="datasend" value="send" />
+</div>
+<div style="float:right;width:300px;border-right:1px solid black;height:500px;padding:10px;overflow-y:scroll;">
+    <b>Users</b>
+    <div id="users"></div>
+</div>

@@ -1,0 +1,19 @@
+{
+  "name": "socketio.prototype",
+  "version": "0.0.0",
+  "description": "socket.io prototype",
+  "main": "socketio.server.js",
+  "author": "Gerhard Goosen",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "express": "4.13.4",
+    "socket.io": "^2.1.1"
+  },
+  "scripts": {
+    "start": "nodemon socketio.server.js"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.5"
+  }
+}
