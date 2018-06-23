@@ -6,6 +6,7 @@
   "author": "Gerhard Goosen",
   "private": true,
   "license": "MIT",
+  "engines":{"node": "8.0.0"},
   "dependencies": {
     "express": "4.13.4",
     "socket.io": "^2.1.1"
