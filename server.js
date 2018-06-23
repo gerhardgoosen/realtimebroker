@@ -6,12 +6,10 @@ var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 //var port = process.env.PORT || 1337;
 
-var io = require('socket.io').listen(server);
+//var io = require('socket.io').listen(server);
 
 
-server.listen(1337, () => {
-    console.log('Server listening at port %d', 1337);
-});
+server.listen(1337, () => {console.log('Server listening at port %d', 1337);});
 
 
 var requests = [];
