@@ -9,7 +9,7 @@ var io = require('socket.io')(server);
 var io = require('socket.io').listen(server);
 
 
-server.listen(port, () => {
+server.listen(1337, () => {
     console.log('Server listening at port %d', 1337);
 });
 
