@@ -124,7 +124,7 @@ io.sockets.on('connection', function (socket) {
 
     // when the user disconnects.. perform this
     socket.on('addroom', function(room){
-        logRequest(null,null,null);sadsa
+        logRequest(null,null,null);
         // add room to rooms array
          rooms.push(room);
 
