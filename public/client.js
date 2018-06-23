@@ -1,5 +1,5 @@
-var socket = io.connect('https://realtimebroker.azurewebsites.net');
-
+ var socket = io.connect('https://realtimebroker.azurewebsites.net');
+// var socket = io.connect('http://localhost:1337');
 // on connection to server, ask for user's name with an anonymous callback
 socket.on('connect', function(){
     // call the server-side function 'adduser' and send one parameter (value of prompt)
@@ -12,6 +12,10 @@ socket.on('updatechat', function (username, data) {
     $("#conversation").scrollTop($("#conversation")[0].scrollHeight);
 });
 
+socket.on('updateserver', function (username, data) {
+    $('#server').append('<b>'+username + ':</b> ' + data + '<br>');
+    $("#server").scrollTop($("#server")[0].scrollHeight);
+});
 
 // listener, whenever the server emits 'updaterooms', this updates the room the client is in
 socket.on('updaterooms', function(rooms, current_room) {
@@ -41,6 +45,10 @@ function switchRoom(room){
 
 // on load of page
 $(function(){
+
+    $('#clearServerLog').click( function() {
+        $('#server').empty();
+    });
 
     $('#addRoom').click( function() {
         var newRoom = prompt("Room name?");
