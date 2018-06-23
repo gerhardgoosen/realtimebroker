@@ -2,14 +2,14 @@
 var express = require('express');
 var app = express();
 var path = require('path');
-var server = require('http').createServer(app);
+
+var http = require('http');
+var server = http.createServer(app);
+
 var io = require('socket.io')(server);
-//var port = process.env.PORT || 1337;
-
-//var io = require('socket.io').listen(server);
 
 
-server.listen(1337, () => {console.log('Server listening at port %d', 1337);});
+//server.listen(1337, () => {console.log('Server listening at port %d', 1337);});
 
 
 var requests = [];
@@ -147,3 +147,9 @@ io.sockets.on('connection', function (socket) {
 
 
 });
+
+
+
+var port = process.env.PORT || 1337;
+server.listen(port);
+console.log("Server running at http://localhost:%d", port);
