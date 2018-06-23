@@ -1,4 +1,4 @@
-var socket = io.connect('https://realtimebroker.azurewebsites.net:1337');
+var socket = io.connect('https://realtimebroker.azurewebsites.net');
 
 // on connection to server, ask for user's name with an anonymous callback
 socket.on('connect', function(){
