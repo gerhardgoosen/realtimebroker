@@ -11,7 +11,7 @@
     "socket.io": "^2.1.1"
   },
   "scripts": {
-    "start": "nodemon socketio.server.js"
+    "start": "node server.js"
   },
   "devDependencies": {
     "nodemon": "^1.17.5"
