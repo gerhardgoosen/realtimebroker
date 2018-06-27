@@ -67,6 +67,7 @@ Presence.prototype.list = function(returnPresent) {
         }
 
         for (var connection in presence) {
+            console.log(JSON.stringify(presence));
             var details = JSON.parse(presence[connection]);
             details.connection = connection;
 
