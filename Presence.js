@@ -2,8 +2,9 @@ var redis = require('redis');
 var config = require('./config');
 
 function Presence() {
-    this.client = redis.createClient({
-        host: config.REDIS_ENDPOINT
+    this.client =redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
+        password: config.REDIS_PASSWORD,
+        tls: { servername: config.REDIS_ENDPOINT }
     });
 }
 module.exports = new Presence();

@@ -26,29 +26,11 @@ var requestsTrimThreshold = 5000;
 var requestsTrimSize = 4000;
 
 
-//io.adapter(redis({host: config.REDIS_ENDPOINT, port: config.REDIS_PORT,auth_pass:rtadmin#easy0N3}));
+const redisClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
+    password: config.REDIS_PASSWORD,
+    tls: { servername: config.REDIS_ENDPOINT }
+});
 
-//const pub = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, { auth_pass: "T5Lt017Jkr57Qq68XVU9TbkuUdABofgD14KMJ16nJqw=" });
-//const sub = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, { auth_pass: "T5Lt017Jkr57Qq68XVU9TbkuUdABofgD14KMJ16nJqw=" });
-//
-// const pubClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
-//     auth_pass: 'T5Lt017Jkr57Qq68XVU9TbkuUdABofgD14KMJ16nJqw=',
-//     tls: { servername: config.REDIS_ENDPOINT }
-// });
-//
-// const subClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
-//     auth_pass: 'T5Lt017Jkr57Qq68XVU9TbkuUdABofgD14KMJ16nJqw=',
-//     tls: { servername: config.REDIS_ENDPOINT }
-// });
-//io.adapter(redisAdapter({ pubClient: pubClient, subClient: subClient }));
-
-
-// const redisClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
-//     password: config.REDIS_PASSWORD,
-//     tls: { servername: config.REDIS_ENDPOINT }
-// });
-
-const redisClient = redis.createClient({url: config.REDIS_URL});
 
 redisClient.set("foo", 'bar');
 redisClient.get("foo", function (err, reply) {
