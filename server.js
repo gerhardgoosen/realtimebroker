@@ -44,7 +44,7 @@ var requestsTrimSize = 4000;
 
 
 const redisClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
-    auth_pass: config.REDIS_PASSWORD,
+    password: config.REDIS_PASSWORD,
     tls: { servername: config.REDIS_ENDPOINT }
 });
 
