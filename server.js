@@ -43,11 +43,12 @@ var requestsTrimSize = 4000;
 //io.adapter(redisAdapter({ pubClient: pubClient, subClient: subClient }));
 
 
-const redisClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
-    password: config.REDIS_PASSWORD,
-    tls: { servername: config.REDIS_ENDPOINT }
-});
+// const redisClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
+//     password: config.REDIS_PASSWORD,
+//     tls: { servername: config.REDIS_ENDPOINT }
+// });
 
+const redisClient = redis.createClient({url: config.REDIS_URL});
 
 redisClient.set("foo", 'bar');
 redisClient.get("foo", function (err, reply) {
