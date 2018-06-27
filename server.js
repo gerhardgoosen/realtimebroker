@@ -6,13 +6,18 @@ var redis = require('socket.io-redis');
 
 
 var express = require('express');
-var app = express();
 var path = require('path');
-var server = require('http').createServer(app);
+var http = require('http');
 var socket = require('socket.io');
+
+var app = express();
+var server = http.createServer(app);
 var io = socket.listen(server);
 var port = process.env.PORT || 1337;
 
+var requests = [];
+var requestsTrimThreshold = 5000;
+var requestsTrimSize = 4000;
 
 // redisPubSub.on("subscribe", function (channel) {
 //     console.log("Subscribed to " + channel);
