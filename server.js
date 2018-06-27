@@ -40,13 +40,23 @@ var requestsTrimSize = 4000;
 //     auth_pass: 'T5Lt017Jkr57Qq68XVU9TbkuUdABofgD14KMJ16nJqw=',
 //     tls: { servername: config.REDIS_ENDPOINT }
 // });
+//io.adapter(redisAdapter({ pubClient: pubClient, subClient: subClient }));
 
 
-const pubClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT );
-pubClient.auth(config.REDIS_PASSWORD);
+const pubClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
+    auth_pass: config.REDIS_PASSWORD,
+    tls: { servername: config.REDIS_ENDPOINT }
+});
+
 const subClient = redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT);
 subClient.auth(config.REDIS_PASSWORD);
 io.adapter(redisAdapter({ pubClient: pubClient, subClient: subClient }));
+
+
+subClient.set("foo", 'bar');
+subClient.get("foo", function (err, reply) {
+    console.log(reply.toString())
+})
 
 
 server.listen(port, () => {
