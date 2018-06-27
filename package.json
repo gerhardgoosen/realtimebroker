@@ -1,20 +1,18 @@
 {
-  "name": "socketio.prototype",
+  "name": "realtimebroker",
   "version": "0.0.0",
-  "description": "socket.io prototype",
-  "main": "socketio.server.js",
+  "description": "real time message broker implemented with socket.io",
+  "main": "server.js",
   "author": "Gerhard Goosen",
   "private": true,
-  "license": "MIT",
-  "engines":{"node": "8.0.0"},
+  "license": "",
   "dependencies": {
     "express": "4.13.4",
-    "socket.io": "^2.1.1"
+    "redis": "^2.8.0",
+    "socket.io": "^2.1.1",
+    "socket.io-redis": "^5.2.0"
   },
   "scripts": {
     "start": "node server.js"
-  },
-  "devDependencies": {
-    "nodemon": "^1.17.5"
   }
 }

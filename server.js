@@ -1,155 +1,145 @@
 // Setup basic express server
+//Setting up Redis Cache
+//var redis = require('redis');
+var redis = require('socket.io-redis');
+//var redisPubSub = redis.createClient();
+
+
 var express = require('express');
 var app = express();
 var path = require('path');
-
-var http = require('http');
-var server = http.createServer(app);
-
-var io = require('socket.io')(server);
-
-
-//server.listen(1337, () => {console.log('Server listening at port %d', 1337);});
+var server = require('http').createServer(app);
+var socket = require('socket.io');
+var io = socket.listen(server);
+var port = process.env.PORT || 1337;
 
 
-var requests = [];
-var requestsTrimThreshold = 5000;
-var requestsTrimSize = 4000;
+// redisPubSub.on("subscribe", function (channel) {
+//     console.log("Subscribed to " + channel);
+// });
+//
+// redisPubSub.on("message", function (channel, message) {
+//     console.log("Message from channel " + channel + " : " + message);
+// });
+//
+//
+// function subscribeToChannel(channel) {
+//     redisPubSub.subscribe(channel);
+// }
+//
+//
+// function publishToChannel(channel,message) {
+//     redisPubSub.publish(channel,message);
+// }
 
-app.use(function (req,res,next){
-    logRequest(req,res,next);
+//io.adapter(redis({ host: 'localhost', port: 6379 }));
+
+server.listen(port, () => {
+  console.log('Server listening at port %d', port);
 });
 
-function logRequest(req,res,next){
+
+
+app.use(function (req, res, next) {
+    logRequest(req, res, next);
+});
+
+function logRequest(req, res, next) {
     requests.push(Date.now());
-    if(requests.length > requestsTrimThreshold ){
-        requests = requests.slice(0,requests.length-requestsTrimSize);
+    if (requests.length > requestsTrimThreshold) {
+        requests = requests.slice(0, requests.length - requestsTrimSize);
     }
-    if(next){
+    if (next) {
         next();
     }
-
 }
 
 app.get("/requests/:seconds", function (req, res) {
-
-    if(req.params.seconds){
+    if (req.params.seconds) {
         var now = Date.now();
-        var aMinAgo = now - (req.params.seconds*1000);
+        var aMinAgo = now - (req.params.seconds * 1000);
         var cnt = 0;
 
-        for(var i = requests.length-1; 1>=0 ; i--){
-            if(requests[i]>=aMinAgo){
+        for (var i = requests.length - 1; 1 >= 0; i--) {
+            if (requests[i] >= aMinAgo) {
                 ++cnt;
-            }else {
+            } else {
                 break;
             }
         }
-        res.json({request:cnt,timeframe:req.params.seconds});
-    }else{
+        res.json({request: cnt, timeframe: req.params.seconds});
+    } else {
         res.html("privide seconds parameter /requests/60 - for the last minute!");
     }
-
 })
 
 
 // Routing
 app.use(express.static(path.join(__dirname, 'public')));
 
+var numUsers = 0;
 
-// usernames which are currently connected to the chat
-var usernames = {};
 
-// rooms which are currently available in chat
-var rooms = ['lobby'];
 
-io.sockets.on('connection', function (socket) {
+io.on('connection', (socket) => {
+  var addedUser = false;
 
-    logRequest(null,null,null);
-
-    // when the client emits 'adduser', this listens and executes
-    socket.on('adduser', function(username){
-        logRequest(null,null,null);
-        // store the username in the socket session for this client
-        socket.username = username;
-        // store the room name in the socket session for this client
-        socket.room = 'lobby';
-        // add the client's username to the global list
-        usernames[username] = username;
-        // send client to room 1
-        socket.join('lobby');
-        // echo to client they've connected
-        socket.emit('updateserver', 'SERVER', 'you have connected to ' + socket.room);
-        // echo to room that a person has connected to their room
-        socket.broadcast
-            .to(socket.room)
-            .emit('updateserver', 'SERVER', username + ' has connected to this room');
-        socket.emit('updaterooms', rooms, socket.room);
-        io.sockets.emit('updateusers', usernames);
+  // when the client emits 'new message', this listens and executes
+  socket.on('new message', (data) => {
+      logRequest(null, null, null);
+    // we tell the client to execute 'new message'
+    socket.broadcast.emit('new message', {
+      username: socket.username,
+      message: data
     });
+  });
 
-    // when the client emits 'sendchat', this listens and executes
-    socket.on('sendchat', function (data) {
-        logRequest(null,null,null);
-        // we tell the client to execute 'updatechat' with 2 parameters
-        io.sockets.in(socket.room).emit('updatechat', socket.username, data);
+  // when the client emits 'add user', this listens and executes
+  socket.on('add user', (username) => {
+      logRequest(null, null, null);
+    if (addedUser) return;
+
+    // we store the username in the socket session for this client
+    socket.username = username;
+    ++numUsers;
+    addedUser = true;
+    socket.emit('login', {
+      numUsers: numUsers
     });
-
-    socket.on('switchRoom', function(newroom){
-        logRequest(null,null,null);
-        // leave the current room (stored in session)
-        socket.leave(socket.room);
-        // join new room, received as function parameter
-        socket.join(newroom);
-        socket.emit('updateserver', 'SERVER', 'you have connected to '+ newroom);
-        // sent message to OLD room
-        socket.broadcast.to(socket.room).emit('updateserver', 'SERVER', socket.username+' has left this room');
-        // update socket session room title
-        socket.room = newroom;
-        socket.broadcast.to(newroom).emit('updateserver', 'SERVER', socket.username+' has joined this room');
-        socket.emit('updaterooms', rooms, newroom);
+    // echo globally (all clients) that a person has connected
+    socket.broadcast.emit('user joined', {
+      username: socket.username,
+      numUsers: numUsers
     });
+  });
 
-    // when the user disconnects.. perform this
-    socket.on('disconnect', function(){
-        logRequest(null,null,null);
-        // remove the username from global usernames list
-        delete usernames[socket.username];
-        // update list of users in chat, client-side
-        io.sockets.emit('updateusers', usernames);
-        // echo globally that this client has left
-        socket.broadcast.emit('updateserver', 'SERVER', socket.username + ' has disconnected');
-        socket.leave(socket.room);
+  // when the client emits 'typing', we broadcast it to others
+  socket.on('typing', () => {
+      logRequest(null, null, null);
+    socket.broadcast.emit('typing', {
+      username: socket.username
     });
+  });
 
-    // when the user disconnects.. perform this
-    socket.on('addroom', function(room){
-        logRequest(null,null,null);
-        // add room to rooms array
-         rooms.push(room);
-
-         socket.emit('updaterooms', rooms, socket.room);
-         socket.broadcast.emit('updaterooms', rooms, socket.room);
-
-        socket.leave(socket.room);
-        // join new room, received as function parameter
-        socket.join(room);
-        socket.emit('updateserver', 'SERVER', 'you have connected to '+ room);
-        // sent message to OLD room
-        socket.broadcast.to(socket.room).emit('updateserver', 'SERVER', socket.username+' has left this room');
-        // update socket session room title
-        socket.room = room;
-        socket.broadcast.to(room).emit('updateserver', 'SERVER', socket.username+' has joined this room');
-
-        socket.emit('updaterooms', rooms, room);
-
+  // when the client emits 'stop typing', we broadcast it to others
+  socket.on('stop typing', () => {
+      logRequest(null, null, null);
+    socket.broadcast.emit('stop typing', {
+      username: socket.username
     });
+  });
 
+  // when the user disconnects.. perform this
+  socket.on('disconnect', () => {
+    if (addedUser) {
+      --numUsers;
+      // echo globally that this client has left
+      socket.broadcast.emit('user left', {
+        username: socket.username,
+        numUsers: numUsers
+      });
+	  
+    }
+  });
 
 });
-
-
-
-var port = process.env.PORT || 1337;
-server.listen(port);
-console.log("Server running at http://localhost:%d", port);
