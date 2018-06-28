@@ -80,14 +80,6 @@ SocketInterface.prototype._init = function (server, restInterface) {
                 });
             });
 
-            // socket.emit('login', {
-            //     numUsers: numUsers
-            // });
-            // echo globally (all clients) that a person has connected
-            // socket.broadcast.emit('user joined', {
-            //     username: socket.username,
-            //     numUsers: numUsers
-            // });
         });
 
         // when the client emits 'typing', we broadcast it to others

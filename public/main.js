@@ -225,6 +225,16 @@ $(function() {
 
   // Socket events
   // Whenever the server emits 'login', log the login message
+    socket.on('presence', (data) => {
+        connected = true;
+        // Display the welcome message
+        var message = "Online – ";
+        log(message, {
+            prepend: true
+        });
+        addParticipantsMessage(data);
+    });
+
   socket.on('login', (data) => {
     connected = true;
     // Display the welcome message
