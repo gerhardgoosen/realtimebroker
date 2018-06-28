@@ -71,7 +71,7 @@ Presence.prototype.list = function(returnPresent) {
             var details = JSON.parse(presence[connection]);
             details.connection = connection;
 
-            if (now - details.when > 8000) {
+            if (now - details.when > 60000) {//one minute of idle
                 dead.push(details);
             } else {
                 active.push(details);

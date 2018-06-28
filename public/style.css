@@ -89,7 +89,7 @@ ul {
 /* Chat page */
 
 .chat.page {
-  display: none;
+  display: flex;
 }
 
 /* Font */
@@ -113,6 +113,13 @@ ul {
 
 .chatArea {
   height: 100%;
+  width: 60%;
+  padding-bottom: 60px;
+}
+
+.userArea {
+  height: 100%;
+  width: 40%;
   padding-bottom: 60px;
 }
 

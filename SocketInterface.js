@@ -5,11 +5,10 @@ var Presence;
 var io;
 
 //variables
-var numUsers = 0;
 
 function SocketInterface(server, redisInterface, restInterface) {
     Presence = require('./Presence')(redisInterface);
-    this._init(server,  restInterface);
+    this._init(server, restInterface);
 }
 
 module.exports = function (server, redisInterface, restInterface) {
@@ -27,12 +26,11 @@ SocketInterface.prototype._init = function (server, restInterface) {
     console.log(`init Socket.IO Interface`);
 
 
-
     io = socket.listen(server);
 
 
     io.on('connection', (socket) => {
-        var addedUser = false;
+
 
         Presence.list(function (users) {
             // Tell the socket how many users are present.
@@ -54,12 +52,9 @@ SocketInterface.prototype._init = function (server, restInterface) {
         // when the client emits 'add user', this listens and executes
         socket.on('add user', (username) => {
             restInterface._logRequest(null, null, null);
-            if (addedUser) return;
 
             // we store the username in the socket session for this client
             socket.username = username;
-            ++numUsers;
-            addedUser = true;
 
             // Set the user as present.
             Presence.upsert(socket.id, {
@@ -75,6 +70,8 @@ SocketInterface.prototype._init = function (server, restInterface) {
                 // echo globally (all clients) that a person has connected
                 io.emit('user joined', {
                     username: socket.username,
+                    id: socket.id,
+                    online: socket.present,
                     //avatar: socket.avatar,
                     numUsers: users.length
                 });
@@ -100,18 +97,26 @@ SocketInterface.prototype._init = function (server, restInterface) {
 
         // when the user disconnects.. perform this
         socket.on('disconnect', () => {
-            if (addedUser) {
-                --numUsers;
+
+            // Set the user as present.
+            socket.present = false;
+            Presence.remove(socket.id);
+
+
+            Presence.list(function (users) {
                 // echo globally that this client has left
                 socket.broadcast.emit('user left', {
                     username: socket.username,
-                    numUsers: numUsers
+                    id: socket.id,
+                    online: socket.present,
+                    numUsers: users.length
                 });
+            });
 
-            }
+
         });
 
-    });
+    });//End of Socket On Connection
 
 
 };
