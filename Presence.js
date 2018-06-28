@@ -1,13 +1,13 @@
-var redis = require('redis');
-var config = require('./config');
+let redis = require('redis');
+let config = require('./config');
+let redisInterface = require('./RedisInterface');
 
-function Presence() {
-    this.client =redis.createClient(config.REDIS_PORT, config.REDIS_ENDPOINT, {
-        password: config.REDIS_PASSWORD,
-        tls: { servername: config.REDIS_ENDPOINT }
-    });
+function Presence( redisInterface ) {
+    this.client =  redisInterface._getClient();
 }
-module.exports = new Presence();
+module.exports = function (redisInterface) {
+    return new Presence( redisInterface );
+}
 
 /**
  * Remember a present user with their connection ID
