@@ -77,6 +77,7 @@ $(function () {
             socket.emit('message', {"appname": "master", "message": message});
             socket.emit('message', {"appname": "app1", "message": message});
             socket.emit('message', {"appname": "app2", "message": message});
+            socket.emit('message', {"appname": "app3", "message": message});
         }
     }
 
