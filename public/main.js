@@ -19,21 +19,28 @@ $(function () {
 
     // Prompt for setting a username
     var username;
-    var connected = false;
+    var authenticated = false;
     var typing = false;
     var lastTypingTime;
     var $currentInput = $usernameInput.focus();
 
     var socket = io();
 
-    const addParticipantsMessage = (data) => {
+
+    const updateParticipantsMessage = (data, options) => {
         var message = '';
-        if (data.numUsers === 1) {
+        if (data.users.length === 1) {
             message += "there's 1 participant";
         } else {
-            message += "there are " + data.numUsers + " participants";
+            message += "there are " + data.users.length + " participants";
         }
         log(message);
+        $users.empty();
+        data.users.forEach(function (user) {
+            addUserPresence(user, options);
+        });
+
+
     }
 
     // Sets the client's username
@@ -48,7 +55,9 @@ $(function () {
             $currentInput = $inputMessage.focus();
 
             // Tell the server your username
-            socket.emit('add user', username);
+            // Authenticate
+            socket.emit('authenticate', {"appname": "master", "username": username});
+
         }
     }
 
@@ -58,14 +67,16 @@ $(function () {
         // Prevent markup from being injected into the message
         message = cleanInput(message);
         // if there is a non-empty message and a socket connection
-        if (message && connected) {
+        if (message && authenticated) {
             $inputMessage.val('');
             addChatMessage({
                 username: username,
                 message: message
             });
             // tell server to execute 'new message' and send along one parameter
-            socket.emit('new message', message);
+            socket.emit('message', {"appname": "master", "message": message});
+            socket.emit('message', {"appname": "app1", "message": message});
+            socket.emit('message', {"appname": "app2", "message": message});
         }
     }
 
@@ -101,25 +112,26 @@ $(function () {
     }
 
     // Adds the visual user to the user list
-    const addUserPresence = (data, options) => {
-        var $userId = $('<span class="socketId"/>')
-            .text('['+data.id+'] ')
-            .css('color', getUsernameColor(data.username));
-        var $usernameDiv = $('<span class="username"/>')
-            .text(data.username)
-            .css('color', getUsernameColor(data.username));
-        var $presenceDiv = $('<span class="presense">')
-            .text( (data.online)?' - online':' - offline' );
+    const addUserPresence = (presence, options) => {
 
+        console.log(presence);
+
+        var $userId = $('<span class="socketId"/>')
+            .text('[' + presence.meta.socketId + '] ');
+        var $usernameDiv = $('<span class="username"/>')
+            .text(presence.meta.username)
+            .css('color', getUsernameColor(presence.meta.username));
+        var $presenceDiv = $('<span class="presence"/>')
+            .text((presence.idle) ? 'idle' : 'online')
+            .css('color', getUsernameColor(presence.meta.username));
 
         var $userDiv = $('<li  class="user"/>')
-            .data('id', data.id)
-            .data('username', data.username)
+            .data('socketId', presence.meta.socketId)
+            .data('username', presence.meta.username)
             .append($userId, $usernameDiv, $presenceDiv);
 
         addUserElement($userDiv, options);
     }
-
 
 
     // Adds the visual chat typing message
@@ -137,10 +149,18 @@ $(function () {
     }
 
     const removeUserElement = (data) => {
-        getUserElement(data).fadeOut(() => {
-            $(this).remove();
+        $('.user').each(function (index) {
+            //console.log( index + ": " + $( this ).data('id') );
+            if ($(this).data('socketId') === data.socketId) {
+                console.log('removing user from ui : ' + data.username);
+                $(this).fadeOut(() => {
+                    $(this).remove();
+                });
+
+            }
         });
     }
+
     // Adds a message element to the messages and scrolls to the bottom
     // el - The element to add as a message
     // options.fade - If the element should fade-in (default = true)
@@ -205,37 +225,28 @@ $(function () {
 
     // Updates the typing event
     const updateTyping = () => {
-        if (connected) {
-            if (!typing) {
-                typing = true;
-                socket.emit('typing');
-            }
-            lastTypingTime = (new Date()).getTime();
 
-            setTimeout(() => {
-                var typingTimer = (new Date()).getTime();
-                var timeDiff = typingTimer - lastTypingTime;
-                if (timeDiff >= TYPING_TIMER_LENGTH && typing) {
-                    socket.emit('stop typing');
-                    typing = false;
-                }
-            }, TYPING_TIMER_LENGTH);
+        if (!typing) {
+            typing = true;
+            socket.emit('typing');
         }
+        lastTypingTime = (new Date()).getTime();
+
+        setTimeout(() => {
+            var typingTimer = (new Date()).getTime();
+            var timeDiff = typingTimer - lastTypingTime;
+            if (timeDiff >= TYPING_TIMER_LENGTH && typing) {
+                socket.emit('stop typing');
+                typing = false;
+            }
+        }, TYPING_TIMER_LENGTH);
+
     }
 
     // Gets the 'X is typing' messages of a user
     const getTypingMessages = (data) => {
         return $('.typing.message').filter(i => {
             return $(this).data('username') === data.username;
-        });
-    }
-
-    // Gets the 'user' in the user list
-    const getUserElement = (data) => {
-        return $('.user.socketId' ).filter(i => {
-             console.log($(this).data('id'));
-             console.log($(this).data('username'));
-            return $(this).data('id') === data.id;
         });
     }
 
@@ -287,44 +298,62 @@ $(function () {
     });
 
     // Socket events
+
+    // socket.on('presence', (data) => {
+    // console.log('on presence');
+    //     data.users.forEach(function (connectedUser) {
+    //         console.log(JSON.stringify(connectedUser));
+    //         $('.user').each(function (index) {
+    //             $(this).remove();
+    //         });
+    //         addUserPresence({id: connectedUser.meta.socketId, username: connectedUser.meta.username});
+    //     });
+    //
+    // });
+
+
     // Whenever the server emits 'login', log the login message
-    socket.on('login', (data) => {
-        connected = true;
+    socket.on('authenticated', (data) => {
+
+        authenticated = data.authenticated;
+
         // Display the welcome message
         var message = "Welcome to Realtime Chat! ";
         log(message, {
             prepend: true
         });
-        addParticipantsMessage(data);
+        updateParticipantsMessage(data, {});
     });
 
     // Whenever the server emits 'new message', update the chat body
-    socket.on('new message', (data) => {
+    socket.on('message', (data) => {
         addChatMessage(data);
     });
 
     // Whenever the server emits 'user joined', log it in the chat body
     socket.on('user joined', (data) => {
         log(data.username + ' joined');
-        addParticipantsMessage(data);
-        addUserPresence(data);
+        updateParticipantsMessage(data);
+
     });
 
     // Whenever the server emits 'user left', log it in the chat body
     socket.on('user left', (data) => {
         log(data.username + ' left');
-        addParticipantsMessage(data);
+        updateParticipantsMessage(data);
         removeChatTyping(data);
         removeUserElement(data);
     });
 
     // Whenever the server emits 'typing', show the typing message
     socket.on('typing', (data) => {
+        console.log('on typing');
         addChatTyping(data);
     });
 
     // Whenever the server emits 'stop typing', kill the typing message
     socket.on('stop typing', (data) => {
+        console.log('on stop typing');
         removeChatTyping(data);
     });
 
@@ -335,7 +364,7 @@ $(function () {
     socket.on('reconnect', () => {
         log('you have been reconnected');
         if (username) {
-            socket.emit('add user', username);
+            socket.emit('adduser', username);
         }
     });
 
